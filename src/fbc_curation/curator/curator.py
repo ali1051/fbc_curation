@@ -71,11 +71,14 @@ class Curator:
                 name=__software__,
                 version=__version__,
                 url=__citation__,
+                familyName="König",
+                givenName="Matthias",
             ),
             curators=self.curators,
             software=software,
             solver=solver,
             environment=f"{os.name}, {platform.system()}, {platform.release()}",
+            url=__citation__,
         )
 
         return md

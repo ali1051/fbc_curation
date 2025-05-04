@@ -10,8 +10,8 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import orjson
 import pandas as pd
-from pydantic import BaseModel as PydanticBaseModel
-from pydantic import Field, ValidationError, validator
+from pydantic import BaseModel as PydanticBaseModel, ConfigDict
+from pydantic import Field, ValidationError, field_validator, ValidationInfo
 from pymetadata import log
 from pymetadata.omex import EntryFormat, ManifestEntry, Omex
 
@@ -24,11 +24,11 @@ logger = log.get_logger(__name__)
 class BaseModel(PydanticBaseModel):
     """Base model."""
 
-    # pass
-    @validator("*")
-    def change_nan_to_none(cls, v: Any, field: Any) -> Any:
+    @field_validator("*", mode="before")
+    def change_nan_to_none(cls, v: Any, info: ValidationInfo) -> Any:
         """Replace NaN to None values."""
-        if (field.outer_type_ is float) and (v is not None) and (np.isnan(v)):
+        # Check if the value is a float and is NaN
+        if isinstance(v, float) and np.isnan(v):
             return None
         return v
 
@@ -52,7 +52,7 @@ class CuratorConstants:
     REACTIONDELETIONS_FILENAME = f"04_{REACTIONDELETIONS_KEY}.tsv"
 
     # special settings for comparison
-    VALUE_INFEASIBLE = np.NaN
+    VALUE_INFEASIBLE = np.nan
 
 
 class StatusCode(str, Enum):
@@ -70,10 +70,7 @@ class FrogObjective(BaseModel):
     status: StatusCode
     value: float
 
-    class Config:
-        """Pydantic configuration FrogObjective."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class FrogFVASingle(BaseModel):
@@ -88,10 +85,7 @@ class FrogFVASingle(BaseModel):
     maximum: Optional[float]
     fraction_optimum: float
 
-    class Config:
-        """Pydantic configuration FrogFVA."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class FrogReactionDeletion(BaseModel):
@@ -103,10 +97,7 @@ class FrogReactionDeletion(BaseModel):
     status: StatusCode
     value: Optional[float]
 
-    class Config:
-        """Pydantic configuration FrogGeneDeletion."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class FrogGeneDeletion(BaseModel):
@@ -118,10 +109,7 @@ class FrogGeneDeletion(BaseModel):
     status: StatusCode
     value: Optional[float]
 
-    class Config:
-        """Pydantic configuration FrogGeneDeletion."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class Creator(BaseModel):
@@ -137,10 +125,7 @@ class Creator(BaseModel):
     site: Optional[str]
     orcid: Optional[str]
 
-    class Config:
-        """Pydantic configuration Creator."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class Tool(BaseModel):
@@ -150,10 +135,14 @@ class Tool(BaseModel):
     version: Optional[str] = Field(description="Version of tool/software/library.")
     url: Optional[str] = Field(description="URL of tool/software/library.")
 
-    class Config:
-        """Pydantic configuration FrogFVA."""
+    familyName: str
+    givenName: str
+    email: Optional[str] = None
+    organization: Optional[str] = None
+    site: Optional[str] = None
+    orcid: Optional[str] = None
 
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class FrogMetaData(BaseModel):
@@ -189,11 +178,9 @@ class FrogMetaData(BaseModel):
         description="Execution environment such as Linux."
     )
 
-    class Config:
-        """Pydantic configuration FrogMetaData."""
+    url: Optional[str] = Field(description="URL of tool/software/library.")
 
-        allow_population_by_field_name = True
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True, use_enum_values=True)
 
     @staticmethod
     def md5_for_path(path: Path) -> str:
@@ -212,10 +199,7 @@ class FrogObjectives(BaseModel):
 
     objectives: List[FrogObjective]
 
-    class Config:
-        """Pydantic configuration FrogObjectives."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
     @staticmethod
     def from_df(df: pd.DataFrame) -> FrogObjectives:
@@ -234,7 +218,7 @@ class FrogObjectives(BaseModel):
     def to_df(self) -> pd.DataFrame:
         """Create objectives DataFrame."""
 
-        d: Dict[str, Any] = self.dict()
+        d: Dict[str, Any] = self.model_dump()
         item = list(d.values())[0]
         df = pd.DataFrame(item)
         if len(df) > 0:
@@ -252,10 +236,7 @@ class FrogFVA(BaseModel):
 
     fva: List[FrogFVASingle]
 
-    class Config:
-        """Pydantic configuration FrogFVA."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
     @staticmethod
     def from_df(df: pd.DataFrame) -> FrogFVA:
@@ -273,7 +254,7 @@ class FrogFVA(BaseModel):
     def to_df(self) -> pd.DataFrame:
         """Create fva DataFrame."""
 
-        d: Dict[str, Any] = self.dict()
+        d: Dict[str, Any] = self.model_dump()
         item = list(d.values())[0]
         df = pd.DataFrame(item)
         if len(df) > 0:
@@ -292,10 +273,7 @@ class FrogReactionDeletions(BaseModel):
 
     deletions: List[FrogReactionDeletion]
 
-    class Config:
-        """Pydantic configuration FrogReactionDeletions."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
     @staticmethod
     def from_df(df: pd.DataFrame) -> FrogReactionDeletions:
@@ -314,7 +292,7 @@ class FrogReactionDeletions(BaseModel):
     def to_df(self) -> pd.DataFrame:
         """Create reaction deletions DataFrame."""
 
-        d: Dict[str, Any] = self.dict()
+        d: Dict[str, Any] = self.model_dump()
         item = list(d.values())[0]
         df = pd.DataFrame(item)
         if len(df) > 0:
@@ -332,10 +310,7 @@ class FrogGeneDeletions(BaseModel):
 
     deletions: List[FrogGeneDeletion]
 
-    class Config:
-        """Pydantic configuration FrogGeneDeletions."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
     @staticmethod
     def from_df(df: pd.DataFrame) -> FrogGeneDeletions:
@@ -354,7 +329,7 @@ class FrogGeneDeletions(BaseModel):
     def to_df(self) -> pd.DataFrame:
         """Create gene deletions DataFrame."""
 
-        d: Dict[str, Any] = self.dict()
+        d: Dict[str, Any] = self.model_dump()
         item = list(d.values())[0]
         df = pd.DataFrame(item)
         if len(df) > 0:
@@ -376,10 +351,7 @@ class FrogReport(BaseModel):
     reaction_deletions: FrogReactionDeletions
     gene_deletions: FrogGeneDeletions
 
-    class Config:
-        """Pydantic configuration FrogReport."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
     def to_json(self, path: Path) -> None:
         """Write FrogReport to JSON format."""
@@ -390,7 +362,7 @@ class FrogReport(BaseModel):
         # write FROG
         logger.debug(f"{path}")
         with open(path, "w+b") as f_json:
-            json_bytes = orjson.dumps(self.dict(), option=orjson.OPT_INDENT_2)
+            json_bytes = orjson.dumps(self.model_dump(), option=orjson.OPT_INDENT_2)
             f_json.write(json_bytes)
 
     @staticmethod
@@ -426,9 +398,9 @@ class FrogReport(BaseModel):
         logger.debug(f"{output_dir / CuratorConstants.METADATA_FILENAME}")
         with open(output_dir / CuratorConstants.METADATA_FILENAME, "w") as f_json:
             # make a copy
-            metadata = FrogMetaData(**self.metadata.dict())
-            metadata.frog_id = f"{metadata.frog_id}_tsv"
-            f_json.write(metadata.json(indent=2))
+            metadata_dict = self.metadata.model_dump()
+            metadata_dict['frog_id'] = f"{metadata_dict['frog_id']}_tsv"
+            f_json.write(orjson.dumps(metadata_dict, option=orjson.OPT_INDENT_2).decode())
 
         # write reference files (TSV files)
         dfs_dict = self.to_dfs()

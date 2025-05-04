@@ -26,24 +26,34 @@ def test_frog_metadata() -> None:
                 organization="Humboldt University Berlin",
                 site="https://livermetabolism.com",
                 orcid="0000-0003-1725-179X",
+                email=None,
             )
         ],
         frog_software=Tool(
             name=__software__,
             version=__version__,
             url=__citation__,
+            familyName="König",
+            givenName="Matthias",
         ),
         software=Tool(
             name="cobrapy",
             version=cobra_version,
             url="https://github.com/opencobra/cobrapy",
+            familyName="König",
+            givenName="Matthias",
         ),
         solver=Tool(
-            name="glpk", version=f"{GLP_MAJOR_VERSION}.{GLP_MINOR_VERSION}", url=None
+            name="glpk", 
+            version=f"{GLP_MAJOR_VERSION}.{GLP_MINOR_VERSION}", 
+            url=None,
+            familyName="König",
+            givenName="Matthias",
         ),
         environment=f"{os.name}, {platform.system()}, {platform.release()}",
         model_location=ecoli_path.name,
         model_filename=ecoli_path.name,
         model_md5=FrogMetaData.md5_for_path(ecoli_path),
+        url=__citation__,
     )
     assert metadata

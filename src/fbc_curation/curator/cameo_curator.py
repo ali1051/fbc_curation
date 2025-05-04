@@ -65,9 +65,15 @@ class CuratorCameo(Curator):
             name="cameo",
             version=cameo_version,
             url="https://github.com/opencobra/cobrapy",
+            familyName="König",
+            givenName="Matthias",
         )
         solver = Tool(
-            name="glpk", version=f"{GLP_MAJOR_VERSION}.{GLP_MINOR_VERSION}", url=None
+            name="glpk", 
+            version=f"{GLP_MAJOR_VERSION}.{GLP_MINOR_VERSION}", 
+            url=None,
+            familyName="König",
+            givenName="Matthias",
         )
         return super().metadata(software=software, solver=solver)
 

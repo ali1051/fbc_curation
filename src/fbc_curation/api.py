@@ -8,7 +8,7 @@ import tempfile
 import traceback
 import typing
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 import orjson
 import requests
@@ -227,12 +227,12 @@ _example_items: Dict[str, Example] = {
         description="iJR904 model from BiGG database as OMEX.",
     ),
 }
-examples = [example.dict() for example in _example_items.values()]
 
 
 @api.get("/api/examples", tags=["examples"])
 def get_examples() -> Dict[Any, Any]:
     """Get FROG examples."""
+    examples = [example.model_dump() for example in _example_items.values()]
     return {"examples": examples}
 
 
